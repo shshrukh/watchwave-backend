@@ -30,8 +30,7 @@ const userSchema = new Schema({
         required: true,
     },
     coverimage: {
-        type: String,
-        required: true
+        type: String
     },
     watchHistory: [
         {
@@ -39,7 +38,7 @@ const userSchema = new Schema({
             ref: "Video"
         }
     ],
-    passowrd: {
+    password: {
         type: String,
         required: [true, "password is required"]
     },
@@ -54,12 +53,13 @@ const userSchema = new Schema({
 );
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
-    this.passowrd = bcrypt.hash(this.passowrd, 2);
-    next()
-})
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
 userSchema.methods.isPasswordCorrect = async function (passowrd) {
-    return await bcrypt.compare(passowrd, this.passowrd)
+    return await bcrypt.compare(passowrd, this.password)
 }
 
 userSchema.methods.generateAccessToken = function () {

@@ -7,3 +7,4 @@ class AipRespince {
     }
 }
 
+export {AipRespince};
