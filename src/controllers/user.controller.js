@@ -5,6 +5,17 @@ import {uploadOnCloudnary} from "../utils/cloudinary.js"
 import { AipRespince } from "../utils/ApiResponse.js";
 
 
+
+const generateAccessAndRefreshToken = async (userId) => {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+    user.refreshToken = refreshToken;
+    user.save({validateBeforeSave: false})
+}
+
+
+
 const registerUser = asyncHnadler( async (req, res) => {
 
     
@@ -39,7 +50,7 @@ const registerUser = asyncHnadler( async (req, res) => {
         password,
         username,
         avatar : avatar.url,
-        coverImage : coverImage?.url || "",
+        coverImage : coverImage.url || "",
     })
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
@@ -54,5 +65,22 @@ const registerUser = asyncHnadler( async (req, res) => {
 
 });
 
+
+const loginUser = asyncHnadler( async ( req, res) => {
+
+    const { username, password, email} = req.body;
+    if( !username || !email ) {throw new ApiError( 400, "all fields are required")};
+    if( !password ){ throw new ApiError(400, "password is required")};
+    const user = await User.findOne({ $or: [{ username },{ email }]});
+
+    if ( !user ) {
+        throw new ApiError(404, "user does not exist");
+    }
+    const isPasswordValid = await user.isPasswordCorrect( password )
+
+    if (!isPasswordValid){
+        throw new ApiError(401, "email or password are incorrect");
+    }  
+});
 
 export { registerUser} 

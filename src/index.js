@@ -19,5 +19,5 @@ connectDB()
             
         })
     })
-    .catch(err => console.log('MONGOOES db connect faild !!!', err))
+    .catch(err => console.log('MONGOOES db connection faild !!!', err))
     
