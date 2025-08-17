@@ -79,7 +79,7 @@ const loginUser = asyncHnadler(async (req, res) => {
     // generate access and refresh token
 
     const { email, username, password } = req.body;
-    if (!email || !!username) {
+    if (!email || !username) {
         throw new ApiError(400, "email or username is required");
     }
     const user = await User.findOne({
@@ -94,11 +94,54 @@ const loginUser = asyncHnadler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-
     
+    const loggenInUser = await User.findById(user._id).select("-password - refreshToken");
 
+    const options = {
+        httpOnly : true, 
+        secure : true
+    }
 
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new AipRespince(
+            200,
+            {
+                user : loggenInUser,
+                accessToken,
+                refreshToken
+            },
+            "User logged in successfuly"
 
+        )
+    )
 });
 
-export { registerUser } 
+const logoutUser = asyncHnadler (async (req, res) => {
+    await User.findOneAndUpdate(
+        req.user._id,
+        {
+            $set :{
+                refreshToken : undefined
+            }
+        },
+        {
+            new : true
+        }
+    );
+    const options = {
+        httpOnly : true, 
+        secure : true
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new AipRespince(200, {}, "User logout successfully"))
+});
+
+export { registerUser, loginUser ,logoutUser} 
