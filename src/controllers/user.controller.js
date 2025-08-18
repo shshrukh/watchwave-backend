@@ -72,31 +72,37 @@ const registerUser = asyncHnadler(async (req, res) => {
 
 
 const loginUser = asyncHnadler(async (req, res) => {
-    // req collect --> Data
-    // access username or email 
-    // find the user
-    // checking password
-    // generate access and refresh token
+   
 
     const { email, username, password } = req.body;
-    if (!email || !username) {
+    if ( !( email || username) ) {
         throw new ApiError(400, "email or username is required");
     }
+   
+    
     const user = await User.findOne({
         $or: [{ email }, { username }]
     })
+
+    
     if (!user) {
         throw new ApiError(404, "user not found");
     }
-    const isPasswordVaid = await user.isPasswordValid(password);
-    if (!isPasswordVaid) {
+   
+    
+    const isPasswordValid = await user.isPasswordCorrect(password);
+   
+    
+    if (!isPasswordValid) {
         throw new ApiError(401, "password is not valid");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
     
-    const loggenInUser = await User.findById(user._id).select("-password - refreshToken");
-
+    
+    const loggenInUser = await User.findById(user._id).select("-password -rsrefreshToken");
+    
+    
     const options = {
         httpOnly : true, 
         secure : true
@@ -125,7 +131,7 @@ const logoutUser = asyncHnadler (async (req, res) => {
         req.user._id,
         {
             $set :{
-                refreshToken : undefined
+                refreshToken : null
             }
         },
         {

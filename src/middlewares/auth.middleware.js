@@ -27,7 +27,9 @@ export const verifyJWT = asyncHnadler ( async (req, res, next)=>{
         }
         
         req.user = user;
+        next();
     } catch (error) {
+        console.log("Error in verifyJWT middleware:", error);
         
     }
 
