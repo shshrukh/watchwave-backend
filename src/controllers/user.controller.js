@@ -70,7 +70,6 @@ const registerUser = asyncHnadler(async (req, res) => {
 
 });
 
-
 const loginUser = asyncHnadler(async (req, res) => {
    
 
@@ -150,4 +149,37 @@ const logoutUser = asyncHnadler (async (req, res) => {
         .json(new AipRespince(200, {}, "User logout successfully"))
 });
 
-export { registerUser, loginUser ,logoutUser} 
+const changePassword = asyncHnadler(async (req, res) => {
+
+    const { password, newPassword } = req.body;
+    console.log("password", password,"newPasseord", newPassword);
+    
+    
+    if(!(password && newPassword)){
+        throw new ApiError(400, "password and new password are required");
+    }
+
+    const user = await User.findById (req.user._id);
+    if( !user ){
+        throw new ApiError(404, "user not found");
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+    if(!isPasswordCorrect){
+        throw new ApiError(401, "password is not valid");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+    .status(200)
+    .json(new AipRespince(200,{}, "password change successfuly"))
+});
+
+const currentUser = asyncHnadler (async(req, res) => {
+    return res
+    .status(200)
+    .json(new AipRespince(200, req.user, "current user fetched successfuly"));
+});
+
+export { registerUser, loginUser ,logoutUser, changePassword,currentUser } 
